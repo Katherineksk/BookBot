@@ -1,0 +1,3 @@
+# The function authenticates callers with Telegram initData, not a Supabase JWT.
+[functions.shelf-api]
+verify_jwt = false
