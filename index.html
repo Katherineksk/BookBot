@@ -869,11 +869,75 @@ function initTelegram(){
   document.querySelectorAll('.back-pill').forEach(b=>b.style.display='none');
 }
 
-/* ---------- local storage (until Supabase) ----------
+/* ---------- Supabase (via the shelf-api Edge Function) ----------
+   Fill in after deploying supabase/functions/shelf-api, e.g.
+   https://<project-ref>.supabase.co/functions/v1/shelf-api
+   Empty means: keep data on the device. */
+const SHELF_API_URL = '';
+
+function localStorageKey(){
+  return 'shelf:v1:' + (tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 'anon');
+}
+
+async function createRemoteDb(){
+  async function call(action, payload){
+    const res = await fetch(SHELF_API_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-Telegram-Init-Data': tg.initData},
+      body: JSON.stringify(Object.assign({action}, payload || {})),
+    });
+    const body = await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(body.error || ('http_' + res.status));
+    return body;
+  }
+
+  let state = await call('load');
+
+  // first launch with the server: move books and logs saved on this phone before Supabase
+  const migratedKey = localStorageKey() + ':migrated';
+  try{
+    const local = JSON.parse(localStorage.getItem(localStorageKey()) || 'null');
+    if(local && !localStorage.getItem(migratedKey)){
+      const localBooks = Object.values(local.books || {});
+      const localLogs = (local.state && local.state.streak && local.state.streak.logsByDate) || {};
+      if(localBooks.length && !state.books.length) await call('addBooks', {books: localBooks});
+      if(Object.keys(localLogs).length) await call('saveLogs', {logsByDate: localLogs});
+      localStorage.setItem(migratedKey, new Date().toISOString());
+      if(localBooks.length || Object.keys(localLogs).length) state = await call('load');
+    }
+  }catch(e){ /* keep going with what the server has; migration retries next launch */ }
+
+  function booksSnap(){ return {docs: state.books.map(b=>({id: b.id, data: ()=>Object.assign({}, b)}))}; }
+  const booksQuery = {
+    orderBy(){ return booksQuery; }, limit(){ return booksQuery; },
+    async get(){ return booksSnap(); },
+    onSnapshot(){ return ()=>{}; },
+    async add(doc){ const r = await call('addBooks', {books: [doc]}); return {id: r.books[0].id}; },
+  };
+  return {
+    collection(name){ if(name!=='books') throw new Error('unknown collection '+name); return booksQuery; },
+    doc(path){
+      const [col, id] = path.split('/');
+      if(col==='books') return {
+        async update(patch){ await call('updateBook', {id, patch}); },
+        async delete(){ await call('deleteBook', {id}); },
+      };
+      if(col==='state' && id==='streak') return {
+        async get(){ return {exists: true, data: ()=>({logsByDate: Object.assign({}, state.logsByDate)})}; },
+        async set(v){ await call('saveLogs', {logsByDate: (v && v.logsByDate) || {}}); },
+        async update(patch){ await call('saveLogs', {logsByDate: (patch && patch.logsByDate) || {}}); },
+        onSnapshot(){ return ()=>{}; },
+      };
+      throw new Error('unknown doc '+path);
+    },
+  };
+}
+
+/* ---------- local storage (outside Telegram, or before Supabase is set up) ----------
    Same small API as the claude.ai db the prototype was written against,
    so the CRUD code above stays unchanged. Data lives on this device only. */
 function createLocalDb(){
-  const KEY = 'shelf:v1:' + (tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 'anon');
+  const KEY = localStorageKey();
   let data;
   try{ data = JSON.parse(localStorage.getItem(KEY) || 'null'); }catch(e){ data = null; }
   data = data || {books:{}, state:{}};
@@ -922,9 +986,14 @@ function createLocalDb(){
 async function boot(){
   renderAll();
   initTelegram();
-  // inside claude.ai keep the artifact db; everywhere else (Telegram, a plain browser) store locally
+  // inside claude.ai keep the artifact db; in Telegram use Supabase once configured;
+  // otherwise (a plain browser, or the server is unreachable) store on the device
   if(window.claude && typeof claude.use === 'function'){
     try{ db = await claude.use('db'); }catch(e){ db = null; }
+  }
+  if(!db && tg && SHELF_API_URL){
+    try{ db = await createRemoteDb(); }
+    catch(e){ db = null; toast('Нет связи с сервером, сохраняю на телефоне'); }
   }
   if(!db){
     try{ db = createLocalDb(); }catch(e){ db = null; }
