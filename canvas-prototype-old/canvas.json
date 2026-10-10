@@ -1,0 +1,25 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-09-23T18:00:00Z" },
+  "title": "Книжный трекер — прототип",
+  "launch": { "view": "focused", "file": "Main.dc.html" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 390, "h": 844, "title": "Главная", "is_interactive": true },
+    "AddBook.dc.html": { "x": 470, "y": 0, "w": 390, "h": 844, "title": "Добавить — способы (черновик)", "is_interactive": true },
+    "AddSearch.dc.html": { "x": 940, "y": 0, "w": 390, "h": 844, "title": "Добавить — поиск", "is_interactive": true },
+    "AddLink.dc.html": { "x": 1410, "y": 0, "w": 390, "h": 844, "title": "Добавить — ссылка", "is_interactive": true },
+    "AddScan.dc.html": { "x": 1880, "y": 0, "w": 390, "h": 844, "title": "Добавить — скан", "is_interactive": true },
+    "AddManual.dc.html": { "x": 2350, "y": 0, "w": 390, "h": 844, "title": "Добавить — вручную", "is_interactive": true },
+    "BookDetail.dc.html": { "x": 0, "y": 964, "w": 390, "h": 844, "title": "Карточка книги", "is_interactive": true },
+    "Stats.dc.html": { "x": 470, "y": 964, "w": 390, "h": 844, "title": "Статистика", "is_interactive": true },
+    "Goal.dc.html": { "x": 940, "y": 964, "w": 390, "h": 844, "title": "Цель на год", "is_interactive": true },
+    "Library.dc.html": { "x": 1410, "y": 964, "w": 390, "h": 844, "title": "Библиотека (папки)", "is_interactive": true }
+  },
+  "order": ["Main.dc.html", "AddBook.dc.html", "AddSearch.dc.html", "AddLink.dc.html", "AddScan.dc.html", "AddManual.dc.html", "BookDetail.dc.html", "Stats.dc.html", "Goal.dc.html", "Library.dc.html"],
+  "notes": {
+    "title-note": { "x": 0, "y": -140, "text": "Книжный трекер — прототип", "kind": "title1", "maxW": 2740 },
+    "row2-note": { "x": 0, "y": 824, "text": "Главные вкладки и вложенные экраны", "kind": "title1", "maxW": 1800 }
+  },
+  "designSystems": []
+}

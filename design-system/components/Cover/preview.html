@@ -1,0 +1,35 @@
+<!-- @dsCard height=300 -->
+<style>
+  .cv{position:relative;width:960px;height:300px;background:var(--bg);overflow:hidden;font-family:var(--font-sans)}
+  .cv svg{position:absolute;left:0;top:0}
+  .name{position:absolute;left:48px;bottom:68px;font:700 120px/0.95 var(--font-serif);letter-spacing:-0.45px;color:var(--ink);margin:0}
+  .tag{position:absolute;left:48px;bottom:28px;font:500 14px/18px var(--font-sans);color:var(--ink-secondary);margin:0;max-width:440px}
+  .wood{fill:var(--wood-front)}
+  .b-orange{fill:var(--accent-active)}.b-blue{fill:var(--accent-blue)}.b-ink{fill:var(--ink)}.b-green{fill:var(--success)}.b-neutral{fill:var(--neutral)}
+  .slab{rx:5px}
+  .hinge-d{stroke:var(--ink);stroke-opacity:.32;stroke-width:1.5}
+  .hinge-l{stroke:var(--surface);stroke-opacity:.5;stroke-width:1.5}
+</style>
+<div class="cv">
+<!-- blocks: accent-active 96x212, accent-blue 72x176, ink 120x240, success 60x152, neutral 80x196 bleeding off right, wood-front 480x32 plank on space-8 grid; all radius-book-edge
+     arrangement: five slabs of unequal height standing on one plank, bottom-aligned, in box x=480..960, last slab bleeds off the right edge
+     pattern: literal motif, books on a shelf; each slab carries the two-line hinge from the cover spec (10 lines), the system's only pattern
+     steps: gaps 12px = space-2+2, radius-book-edge 5px, plank height 32px -->
+<svg width="960" height="300" viewBox="0 0 960 300" aria-hidden="true">
+  <rect class="slab b-orange" x="504" y="56" width="96" height="212"/>
+  <rect class="slab b-blue" x="612" y="92" width="72" height="176"/>
+  <rect class="slab b-ink" x="696" y="28" width="120" height="240"/>
+  <rect class="slab b-green" x="828" y="116" width="60" height="152"/>
+  <rect class="slab b-neutral" x="900" y="72" width="80" height="196"/>
+  <g>
+    <line class="hinge-d" x1="512" y1="56" x2="512" y2="268"/><line class="hinge-l" x1="516" y1="56" x2="516" y2="268"/>
+    <line class="hinge-d" x1="620" y1="92" x2="620" y2="268"/><line class="hinge-l" x1="624" y1="92" x2="624" y2="268"/>
+    <line class="hinge-d" x1="704" y1="28" x2="704" y2="268"/><line class="hinge-l" x1="708" y1="28" x2="708" y2="268"/>
+    <line class="hinge-d" x1="836" y1="116" x2="836" y2="268"/><line class="hinge-l" x1="840" y1="116" x2="840" y2="268"/>
+    <line class="hinge-d" x1="908" y1="72" x2="908" y2="268"/><line class="hinge-l" x1="912" y1="72" x2="912" y2="268"/>
+  </g>
+  <rect class="wood" x="480" y="268" width="480" height="32" rx="3"/>
+</svg>
+<h1 class="name">Shelf</h1>
+<p class="tag">Библиотека на деревянной полке</p>
+</div>

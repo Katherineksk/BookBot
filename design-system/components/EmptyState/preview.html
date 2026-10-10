@@ -1,0 +1,29 @@
+<!-- @dsCard group="Состояния" height=360 -->
+<style>
+  *{box-sizing:border-box}
+  body{margin:0}
+  .stage{background:var(--bg);color:var(--ink);font-family:var(--font-sans);padding:24px 16px}
+  .cover{position:relative;width:var(--size-cover-shelf-w);height:var(--size-cover-shelf-h);flex:none;color:var(--on-ink);
+    border-radius:var(--radius-book) var(--radius-book-edge) var(--radius-book-edge) var(--radius-book);box-shadow:var(--shadow-book)}
+  .cover::before{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(100deg,rgba(255,255,255,.14),rgba(255,255,255,0) 30%,rgba(0,0,0,0) 80%,rgba(0,0,0,.06))}
+  .cover::after{content:"";position:absolute;left:0;top:0;bottom:0;width:7%;min-width:6px;border-radius:inherit;pointer-events:none;
+    background:linear-gradient(to right,rgba(255,255,255,.22) 0,rgba(255,255,255,.22) 1px,rgba(0,0,0,.32) 1px,rgba(0,0,0,.32) 2px,rgba(0,0,0,0) 2px,rgba(0,0,0,0) 4px,rgba(0,0,0,.2) 4px,rgba(0,0,0,.2) 5px,rgba(255,255,255,.24) 5px,rgba(255,255,255,.24) 6px,rgba(0,0,0,0) 6px)}
+  .cover .t{position:relative;z-index:2;height:100%;display:flex;align-items:center;justify-content:center;padding:10px;text-align:center;font:700 13px/1.2 var(--font-serif)}
+  .c1{background:var(--cover-1)}.c2{background:var(--cover-2)}.c3{background:var(--cover-3)}.c4{background:var(--cover-4)}.c5{background:var(--cover-5)}.c6{background:var(--cover-6)}
+  .pill{display:inline-flex;align-items:center;justify-content:center;width:var(--size-pill-w);height:var(--size-pill-h);border:0;border-radius:var(--radius-pill);background:var(--ink);color:var(--on-ink);font:590 13px/16px var(--font-sans)}
+</style><style>
+  .shelf{position:relative;display:flex;gap:var(--space-6);justify-content:center;align-items:flex-end;padding:0 var(--space-6) 11px;min-height:156px}
+  .shelf::before{content:"";position:absolute;left:6px;right:6px;bottom:10px;height:13px;background:url(/_blob/6c4054f1638312e49949b3bfa4a6faac) center/100% 100% no-repeat;filter:brightness(1.18);clip-path:polygon(2% 0,98% 0,100% 100%,0 100%)}
+  .shelf::after{content:"";position:absolute;left:6px;right:6px;bottom:0;height:11px;z-index:2;pointer-events:none;border-radius:var(--radius-shelf);background:url(/_blob/6c4054f1638312e49949b3bfa4a6faac) center/100% 100% no-repeat;box-shadow:var(--shadow-shelf)}
+  .shelf>*{position:relative;z-index:1}
+</style>
+<div class="stage"><div style="text-align:center">
+<div class="shelf" style="margin-top:8px">
+  <div class="cover" style="background:var(--surface);border:2px dashed var(--ink);box-shadow:none;display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div>
+  <div class="cover" style="background:#ffffff8c;border:2px dashed #00000038;box-shadow:none"></div>
+  <div class="cover" style="background:#ffffff8c;border:2px dashed #00000038;box-shadow:none"></div>
+</div>
+<div style="font:600 27px/32px var(--font-serif);letter-spacing:-0.45px;margin-top:28px">Здесь пока пусто</div>
+<div style="font:510 17px/22px var(--font-sans);color:var(--ink-secondary);max-width:280px;margin:6px auto 0">Добавь первую книгу, и на полке появится твоя библиотека</div>
+<button class="pill" style="width:auto;padding:0 26px;font-size:15px;margin-top:22px">Добавить книгу</button>
+</div></div>

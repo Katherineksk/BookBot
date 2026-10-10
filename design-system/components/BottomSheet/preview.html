@@ -1,0 +1,25 @@
+<!-- @dsCard group="Навигация" height=290 -->
+<style>
+  *{box-sizing:border-box}
+  body{margin:0}
+  .stage{background:var(--bg);color:var(--ink);font-family:var(--font-sans);padding:24px 16px}
+  .cover{position:relative;width:var(--size-cover-shelf-w);height:var(--size-cover-shelf-h);flex:none;color:var(--on-ink);
+    border-radius:var(--radius-book) var(--radius-book-edge) var(--radius-book-edge) var(--radius-book);box-shadow:var(--shadow-book)}
+  .cover::before{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(100deg,rgba(255,255,255,.14),rgba(255,255,255,0) 30%,rgba(0,0,0,0) 80%,rgba(0,0,0,.06))}
+  .cover::after{content:"";position:absolute;left:0;top:0;bottom:0;width:7%;min-width:6px;border-radius:inherit;pointer-events:none;
+    background:linear-gradient(to right,rgba(255,255,255,.22) 0,rgba(255,255,255,.22) 1px,rgba(0,0,0,.32) 1px,rgba(0,0,0,.32) 2px,rgba(0,0,0,0) 2px,rgba(0,0,0,0) 4px,rgba(0,0,0,.2) 4px,rgba(0,0,0,.2) 5px,rgba(255,255,255,.24) 5px,rgba(255,255,255,.24) 6px,rgba(0,0,0,0) 6px)}
+  .cover .t{position:relative;z-index:2;height:100%;display:flex;align-items:center;justify-content:center;padding:10px;text-align:center;font:700 13px/1.2 var(--font-serif)}
+  .c1{background:var(--cover-1)}.c2{background:var(--cover-2)}.c3{background:var(--cover-3)}.c4{background:var(--cover-4)}.c5{background:var(--cover-5)}.c6{background:var(--cover-6)}
+  .pill{display:inline-flex;align-items:center;justify-content:center;width:var(--size-pill-w);height:var(--size-pill-h);border:0;border-radius:var(--radius-pill);background:var(--ink);color:var(--on-ink);font:590 13px/16px var(--font-sans)}
+</style>
+<div class="stage"><div style="background:var(--scrim);padding-top:40px;border-radius:var(--radius-sheet)">
+<div style="background:var(--surface);border-radius:var(--radius-sheet) var(--radius-sheet) 0 0;padding:14px var(--space-5) 28px;max-width:353px">
+  <div style="width:36px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 16px"></div>
+  <div style="font:700 19px/24px var(--font-serif);margin-bottom:14px">Добавить книгу</div>
+  <div style="display:flex;align-items:center;gap:14px;padding:13px 4px;border-bottom:1px solid var(--line)">
+    <div style="width:38px;height:38px;border-radius:var(--radius-sm);background:var(--field)"></div>
+    <div><div style="font:500 15px/20px var(--font-sans)">Найти по названию</div><div style="font:500 12px/16px var(--font-sans);color:var(--ink-secondary)">Подборку составляет Claude</div></div></div>
+  <div style="display:flex;align-items:center;gap:14px;padding:13px 4px">
+    <div style="width:38px;height:38px;border-radius:var(--radius-sm);background:var(--field)"></div>
+    <div><div style="font:500 15px/20px var(--font-sans)">Добавить вручную</div><div style="font:500 12px/16px var(--font-sans);color:var(--ink-secondary)">Своя обложка и данные</div></div></div>
+</div></div></div>

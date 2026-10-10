@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Статистика</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  body{margin:0}
+  a{color:inherit;text-decoration:none}
+  button{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',Helvetica,Arial,sans-serif;cursor:pointer}
+  ::-webkit-scrollbar{display:none}
+  .add-sheet{transition:transform .45s cubic-bezier(0.34,1.35,0.64,1), opacity .25s ease;}
+  .add-scrim{transition:background-color .3s ease;}
+</style>
+</helmet>
+
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F2F2F7; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', Helvetica, Arial, sans-serif; color: #1C1C1E; position: relative; overflow: hidden; display: flex; flex-direction: column;">
+
+  <div style="padding: 22px 20px 6px; flex-shrink: 0;">
+    <div style="font-family: ui-serif, 'New York', Charter, Georgia, serif; font-weight: 700; font-size: 34px; letter-spacing: -0.01em;">Статистика</div>
+  </div>
+
+  <div style="flex-grow: 1; overflow-y: auto; padding: 10px 20px 118px;">
+
+    <div style="background: linear-gradient(135deg, #FF9F0A, #FF3B30); border-radius: 22px; padding: 20px; color: #FFFFFF; margin-bottom: 16px;">
+      <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 14px;">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 2c1 3-2 4-2 7a3 3 0 0 0 6 0c1.5 1.2 2.5 3 2.5 5a6.5 6.5 0 0 1-13 0c0-4 3-6 3-8.5C8.5 4 10 2.5 12 2z"/></svg>
+        <div>
+          <div style="font-family: ui-serif, 'New York', Charter, Georgia, serif; font-weight: 700; font-size: 34px; line-height: 1;">12</div>
+          <div style="font-size: 12.5px; opacity: 0.9;">дней подряд</div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 6px;">
+        <sc-for list="{{weekDots}}" as="d" hint-placeholder-count="7">
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+            <div style="width: 100%; height: 5px; border-radius: 999px; background: {{d.color}};"></div>
+            <div style="font-size: 9px; opacity: 0.85;">{{d.label}}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="background: #FFFFFF; border-radius: 18px; padding: 16px; margin-bottom: 16px;">
+      <div style="font-size: 13px; color: #8E8E93; font-weight: 600; margin-bottom: 10px;">Активность за 14 недель</div>
+      <div style="display: grid; grid-template-rows: repeat(7, 1fr); grid-auto-flow: column; gap: 3px;">
+        <sc-for list="{{heatmap}}" as="cell" hint-placeholder-count="98">
+          <div style="width: 9px; height: 9px; border-radius: 2px; background: {{cell.color}};"></div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;">
+      <div style="background: #FFFFFF; border-radius: 16px; padding: 16px;">
+        <div style="font-family: ui-serif, 'New York', Charter, Georgia, serif; font-weight: 700; font-size: 26px;">14</div>
+        <div style="font-size: 12px; color: #8E8E93;">книг прочитано</div>
+      </div>
+      <div style="background: #FFFFFF; border-radius: 16px; padding: 16px;">
+        <div style="font-family: ui-serif, 'New York', Charter, Georgia, serif; font-weight: 700; font-size: 26px;">3 940</div>
+        <div style="font-size: 12px; color: #8E8E93;">страниц</div>
+      </div>
+      <div style="background: #FFFFFF; border-radius: 16px; padding: 16px;">
+        <div style="display: flex; align-items: baseline; gap: 5px;">
+          <div style="font-family: ui-serif, 'New York', Charter, Georgia, serif; font-weight: 700; font-size: 26px;">4.3</div>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="#FF9500" stroke="#FF9500" stroke-width="1"><path d="M12 2l2.9 6.2 6.8.6-5.1 4.6 1.5 6.7L12 16.9l-6.1 3.2 1.5-6.7L2.3 8.8l6.8-.6L12 2z"/></svg>
+        </div>
+        <div style="font-size: 12px; color: #8E8E93;">средняя оценка</div>
+      </div>
+      <a href="Goal.dc.html" style="background: #FFFFFF; border-radius: 16px; padding: 16px; display: block;">
+        <div style="font-family: ui-serif, 'New York', Charter, Georgia, serif; font-weight: 700; font-size: 26px; color: {{accent}};">58%</div>
+        <div style="font-size: 12px; color: #8E8E93;">цели на год</div>
+      </a>
+    </div>
+
+  </div>
+
+  <div class="add-scrim" style="position: absolute; inset: 0; background: rgba(0,0,0,{{scrimAlpha}}); pointer-events: {{overlayPointer}}; z-index: 40;" onClick="{{closeSheet}}"></div>
+
+  <div class="add-sheet" style="position: absolute; left: 16px; right: 16px; bottom: 96px; transform-origin: 90% 100%; transform: {{sheetTransform}}; opacity: {{sheetOpacity}}; pointer-events: {{overlayPointer}}; background: rgba(255,255,255,0.8); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 0.5px solid rgba(255,255,255,0.6); border-radius: 28px; padding: 16px; box-shadow: 0 24px 54px rgba(0,0,0,0.35); z-index: 41; display: flex; flex-direction: column; gap: 10px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 4px 4px;">
+      <div style="font-family: ui-serif, 'New York', Charter, Georgia, serif; font-weight: 700; font-size: 19px;">Добавить книгу</div>
+      <button onClick="{{closeSheet}}" aria-label="Закрыть" style="width: 28px; height: 28px; border-radius: 999px; border: none; background: rgba(118,118,128,0.18); display: flex; align-items: center; justify-content: center;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1C1C1E" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <a href="AddLink.dc.html" style="display: flex; align-items: center; gap: 12px; background: #FFFFFF; border-radius: 14px; padding: 12px;">
+      <div style="width: 38px; height: 38px; border-radius: 10px; background: #007AFF; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1.5-1.5"/></svg></div>
+      <div><div style="font-size: 15px; font-weight: 600;">Вставить ссылку</div><div style="font-size: 12px; color: #8E8E93;">Ozon, Читай-город</div></div>
+    </a>
+    <a href="AddScan.dc.html" style="display: flex; align-items: center; gap: 12px; background: #FFFFFF; border-radius: 14px; padding: 12px;">
+      <div style="width: 38px; height: 38px; border-radius: 10px; background: #FF9500; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2"/><path d="M4 16v2a2 2 0 0 0 2 2h2"/><path d="M20 8V6a2 2 0 0 0-2-2h-2"/><path d="M20 16v2a2 2 0 0 1-2 2h-2"/><circle cx="12" cy="12" r="3.5"/></svg></div>
+      <div><div style="font-size: 15px; font-weight: 600;">Сканировать обложку</div><div style="font-size: 12px; color: #8E8E93;">Или штрихкод</div></div>
+    </a>
+    <a href="AddSearch.dc.html" style="display: flex; align-items: center; gap: 12px; background: #FFFFFF; border-radius: 14px; padding: 12px;">
+      <div style="width: 38px; height: 38px; border-radius: 10px; background: #5E7A73; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.1" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg></div>
+      <div><div style="font-size: 15px; font-weight: 600;">Найти по названию</div><div style="font-size: 12px; color: #8E8E93;">Поиск по базе книг</div></div>
+    </a>
+    <a href="AddManual.dc.html" style="display: flex; align-items: center; gap: 12px; background: #FFFFFF; border-radius: 14px; padding: 12px;">
+      <div style="width: 38px; height: 38px; border-radius: 10px; background: #7A5B63; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></div>
+      <div><div style="font-size: 15px; font-weight: 600;">Добавить вручную</div><div style="font-size: 12px; color: #8E8E93;">Если книги нет в базе</div></div>
+    </a>
+  </div>
+
+  <div style="position: absolute; left: 20px; right: 20px; bottom: 20px; height: 64px; display: flex; align-items: center; gap: 10px; z-index: 30;">
+    <div style="flex-grow: 1; height: 64px; border-radius: 32px; background: rgba(255,255,255,0.68); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 0.5px solid rgba(255,255,255,0.75); box-shadow: 0 10px 26px rgba(0,0,0,0.16); display: flex; align-items: center; justify-content: space-around; padding: 0 6px;">
+      <a href="Main.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 16px; border-radius: 18px; font-size: 10px; font-weight: 600; color: #8E8E93;">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-8 9 8"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
+        Главная
+      </a>
+      <a href="Stats.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 16px; border-radius: 18px; background: rgba(0,122,255,0.14); font-size: 10px; font-weight: 600; color: {{accent}};">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M12 20V4"/><path d="M20 20v-7"/></svg>
+        Статистика
+      </a>
+      <a href="Library.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 16px; border-radius: 18px; font-size: 10px; font-weight: 600; color: #8E8E93;">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a1 1 0 0 1 1-1h4l2 2h9a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7z"/></svg>
+        Библиотека
+      </a>
+    </div>
+    <button onClick="{{openSheet}}" aria-label="Добавить книгу" style="flex-shrink: 0; width: 64px; height: 64px; border-radius: 32px; background: rgba(255,255,255,0.68); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 0.5px solid rgba(255,255,255,0.75); box-shadow: 0 10px 26px rgba(0,0,0,0.16); display: flex; align-items: center; justify-content: center;">
+      <div style="width: 40px; height: 40px; border-radius: 999px; background: {{accent}}; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,122,255,0.42), inset 0 1px 0 rgba(255,255,255,0.4);">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      </div>
+    </button>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#007AFF","options":["#007AFF","#FF9500","#34C759","#AF52DE"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { addOpen: false };
+  }
+  toggleSheet(v) {
+    return () => this.setState({ addOpen: v });
+  }
+  renderVals() {
+    const accent = this.props.accent ?? '#007AFF';
+    const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+    const weekDots = days.map((label, i) => ({ label, color: i < 6 ? '#FFFFFF' : 'rgba(255,255,255,0.35)' }));
+    const cellCount = 98;
+    const heatmap = Array.from({ length: cellCount }, (_, i) => {
+      const level = (i * i + i * 3) % 4;
+      const colors = ['#E5E5EA', 'rgba(255,149,0,0.35)', 'rgba(255,149,0,0.65)', '#FF9500'];
+      return { color: colors[level] };
+    });
+    const open = this.state.addOpen;
+    return {
+      accent,
+      weekDots,
+      heatmap,
+      openSheet: this.toggleSheet(true),
+      closeSheet: this.toggleSheet(false),
+      scrimAlpha: open ? 0.38 : 0,
+      sheetTransform: open ? 'scale(1) translateY(0)' : 'scale(0.1) translateY(50%)',
+      sheetOpacity: open ? 1 : 0,
+      overlayPointer: open ? 'auto' : 'none'
+    };
+  }
+}
+</script>
+</body>
+</html>

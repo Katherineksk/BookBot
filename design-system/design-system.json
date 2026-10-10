@@ -1,0 +1,80 @@
+{
+ "v": 3,
+ "layout": "files",
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-10-08T20:30:00Z"
+ },
+ "title": "Shelf",
+ "namespace": "Shelf",
+ "libraries": [],
+ "sections": {},
+ "groups": [
+  "Shelf",
+  "Illustrations"
+ ],
+ "assetGroups": {
+  "Shelf": {
+   "name": "Shelf",
+   "tile": "l",
+   "order": [
+    "plank.png"
+   ],
+   "files": {
+    "plank.png": {
+     "name": "plank.png",
+     "blob": "6c4054f1638312e49949b3bfa4a6faac",
+     "size": 63522,
+     "type": "image/png"
+    }
+   }
+  },
+  "Illustrations": {
+   "name": "Illustrations",
+   "tile": "m",
+   "order": [
+    "basket.png",
+    "sunburst.png",
+    "star-lg.png",
+    "star-sm.png"
+   ],
+   "files": {
+    "basket.png": {
+     "name": "basket.png",
+     "blob": "6c87cd6a0ca39f2d8a9e0f03520d66e4",
+     "size": 258749,
+     "type": "image/png"
+    },
+    "sunburst.png": {
+     "name": "sunburst.png",
+     "blob": "43a042730f33ee74f9f5a775621c0e87",
+     "size": 124273,
+     "type": "image/png"
+    },
+    "star-sm.png": {
+     "name": "star-sm.png",
+     "blob": "d74abf1fbbe054346093c663f6bb42ff",
+     "size": 6417,
+     "type": "image/png"
+    },
+    "star-lg.png": {
+     "name": "star-lg.png",
+     "blob": "aad379264fce6a3905bd9ac84e7bbb4c",
+     "size": 14467,
+     "type": "image/png"
+    }
+   }
+  }
+ },
+ "blobs": {},
+ "docs": {
+  "readme": "project/README.md",
+  "sections": []
+ },
+ "lastChange": {
+  "by": "Katherine",
+  "at": "2026-10-08T20:30:00Z",
+  "via": "Claude",
+  "note": "Первая версия: токены, раскладка и компоненты из макета Shelf Wireframes и прототипа"
+ }
+}

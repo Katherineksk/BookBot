@@ -1,0 +1,861 @@
+<title>Книжный трекер</title>
+<style>
+  :root{
+    --accent:#007AFF;
+    --bg:#F2F1ED;
+    --card:#FFFFFF;
+    --ink:#1C1C1E;
+    --sub:#6B7280;
+    --line:rgba(0,0,0,0.07);
+    --green:#34C759;
+    --red:#FF3B30;
+    --grey:#6B7A8F;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+    height:100%; overflow:hidden;}
+  .serif{font-family:ui-serif,"New York",Charter,Georgia,serif;}
+  #app{position:relative; width:100%; height:100%; max-width:480px; margin:0 auto; background:var(--bg); overflow:hidden;}
+  .screen{position:absolute; inset:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:0 0 140px 0; display:none;}
+  .screen.active{display:block;}
+  .topbar{padding:18px 20px 6px; display:flex; align-items:center; justify-content:space-between;}
+  .topbar h1{font-size:30px; margin:0; font-weight:700;}
+  .streak-pill{display:flex; align-items:center; gap:5px; font-size:14px; color:var(--sub); background:var(--card); padding:6px 12px; border-radius:20px; border:1px solid var(--line);}
+  .section{padding:0 20px; margin-top:18px;}
+  .section-title{font-size:13px; text-transform:uppercase; letter-spacing:0.04em; color:var(--sub); margin:0 0 10px 2px; font-weight:600;}
+  .card{background:var(--card); border-radius:20px; padding:16px; border:1px solid var(--line);}
+
+  /* today card */
+  .today-row{display:flex; gap:12px; overflow-x:auto; padding-bottom:4px; margin-bottom:14px;}
+  .today-row::-webkit-scrollbar{display:none;}
+  .today-item{flex:0 0 auto; width:64px; text-align:center;}
+  .today-item .cover{width:56px; height:82px; margin:0 auto 6px;}
+  .today-item .pct{font-size:11px; color:var(--sub);}
+  .empty-note{font-size:14px; color:var(--sub); padding:10px 2px;}
+
+  .log-btn{width:100%; background:var(--accent); color:#fff; border:none; border-radius:14px; padding:14px; font-size:15px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:8px;}
+  .seg{display:flex; background:#EFEFF0; border-radius:10px; padding:3px; margin-bottom:14px;}
+  .seg button{flex:1; border:none; background:transparent; padding:8px; border-radius:8px; font-size:14px; font-weight:600; color:var(--sub);}
+  .seg button.active{background:#fff; color:var(--ink); box-shadow:0 1px 3px rgba(0,0,0,0.12);}
+  .stepper{display:flex; align-items:center; justify-content:center; gap:22px; margin-bottom:14px;}
+  .stepper button{width:40px; height:40px; border-radius:50%; border:none; background:#EFEFF0; font-size:20px; font-weight:600; color:var(--ink);}
+  .stepper .val{font-size:22px; font-weight:700; min-width:110px; text-align:center;}
+  .save-btn{width:100%; background:var(--ink); color:#fff; border:none; border-radius:14px; padding:14px; font-size:15px; font-weight:600;}
+  .done-row{display:flex; align-items:center; gap:10px; color:var(--green); font-size:15px; font-weight:600;}
+  .done-row .edit-link{margin-left:auto; color:var(--accent); font-size:14px; font-weight:600;}
+
+  /* shelves */
+  .shelf-row{display:flex; gap:14px; overflow-x:auto; padding:2px 20px 6px; margin:0 -20px;}
+  .shelf-row::-webkit-scrollbar{display:none;}
+  .shelf-book{flex:0 0 auto; width:126px;}
+  .shelf-book .title{font-size:13px; font-weight:600; margin-top:8px; line-height:1.25; max-width:126px;}
+  .shelf-book .author{font-size:12px; color:var(--sub); margin-top:1px;}
+
+  .cover{position:relative; width:126px; height:184px; border-radius:3px 9px 9px 3px; background-size:cover; background-position:center;
+    box-shadow:4px 12px 22px rgba(0,0,0,0.28), 0 2px 5px rgba(0,0,0,0.18); overflow:hidden;}
+  .cover::before{content:""; position:absolute; inset:0; background:linear-gradient(100deg, rgba(255,255,255,0.32) 0%, rgba(255,255,255,0) 16%, rgba(255,255,255,0) 82%, rgba(0,0,0,0.3) 100%);}
+  .cover::after{content:""; position:absolute; left:0; top:0; bottom:0; width:6px; background:linear-gradient(to right, rgba(0,0,0,0.45), rgba(0,0,0,0));}
+  .cover .pages{position:absolute; right:-1px; top:2px; bottom:2px; width:4px; background:repeating-linear-gradient(to bottom, #F7F2E7 0px, #F7F2E7 1.5px, #DED5BE 1.5px, #DED5BE 3px);}
+  .cover .txt{position:relative; z-index:2; height:100%; display:flex; align-items:center; justify-content:center; padding:10px; text-align:center; color:#fff; font-size:13px; font-weight:700; font-family:ui-serif,"New York",Charter,Georgia,serif; line-height:1.2;}
+  .cover-lg{width:176px; height:257px; border-radius:4px 12px 12px 4px; margin:0 auto;}
+  .cover-lg .txt{font-size:16px; padding:16px;}
+
+  /* library */
+  .folder-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:0 20px;}
+  .folder{background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px; display:flex; flex-direction:column; gap:10px;}
+  .folder .icon{width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center;}
+  .folder .name{font-size:15px; font-weight:600;}
+  .folder .count{font-size:13px; color:var(--sub);}
+  .back-pill{display:inline-flex; align-items:center; gap:4px; font-size:15px; color:var(--accent); font-weight:500; margin:14px 20px 10px; background:none; border:none; padding:0;}
+  .book-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px 10px; padding:6px 20px;}
+  .book-grid .title{font-size:12px; font-weight:600; margin-top:6px; line-height:1.2;}
+  .book-grid .cover{width:100%; height:150px;}
+
+  /* stats */
+  .stat-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:0 20px;}
+  .stat-tile{background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px;}
+  .stat-tile .num{font-size:26px; font-weight:700; font-family:ui-serif,"New York",Charter,Georgia,serif;}
+  .stat-tile .lab{font-size:13px; color:var(--sub); margin-top:2px;}
+  .heat{display:grid; grid-template-columns:repeat(14, 1fr); gap:3px; padding:0 20px;}
+  .heat div{aspect-ratio:1; border-radius:2px; background:#E4E1D8;}
+
+  /* tabbar */
+  .tabbar-wrap{position:absolute; left:20px; right:20px; bottom:20px; height:64px; display:flex; align-items:center; gap:10px; z-index:30;}
+  .tabbar{flex-grow:1; height:64px; border-radius:32px; background:rgba(255,255,255,0.7); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); box-shadow:0 8px 30px rgba(0,0,0,0.14), 0 0 0 0.5px rgba(0,0,0,0.04); display:flex; align-items:center; justify-content:space-around; padding:0 6px;}
+  .tabbar a{flex:1; text-align:center; text-decoration:none; color:#6b6b6b; font-size:13px; font-weight:600; padding:10px 4px; border-radius:22px; transition:background .2s;}
+  .tabbar a.active{background:rgba(0,122,255,0.14); color:var(--accent);}
+  .plus-btn{flex-shrink:0; width:64px; height:64px; border-radius:32px; background:rgba(255,255,255,0.7); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); box-shadow:0 8px 30px rgba(0,0,0,0.14), 0 0 0 0.5px rgba(0,0,0,0.04); border:none; display:flex; align-items:center; justify-content:center;}
+  .plus-btn .core{width:40px; height:40px; border-radius:999px; background:var(--accent); display:flex; align-items:center; justify-content:center;}
+
+  /* add sheet */
+  .scrim{position:absolute; inset:0; background:rgba(0,0,0,0.35); z-index:40; opacity:0; pointer-events:none; transition:opacity .25s ease;}
+  .scrim.open{opacity:1; pointer-events:auto;}
+  .sheet{position:absolute; left:0; right:0; bottom:0; background:var(--card); border-radius:26px 26px 0 0; z-index:41; padding:14px 20px calc(28px + env(safe-area-inset-bottom)); transform:translateY(100%); opacity:0; transform-origin:90% 100%; transition:transform .45s cubic-bezier(0.34,1.35,0.64,1), opacity .25s ease;}
+  .sheet.open{transform:translateY(0); opacity:1;}
+  .sheet .grabber{width:36px; height:5px; background:#D8D8DC; border-radius:3px; margin:0 auto 16px;}
+  .sheet h2{font-size:19px; margin:0 0 14px; font-family:ui-serif,"New York",Charter,Georgia,serif;}
+  .method{display:flex; align-items:center; gap:14px; padding:13px 4px; border-bottom:1px solid var(--line); background:none; border-left:none; border-right:none; border-top:none; width:100%; text-align:left;}
+  .method:last-child{border-bottom:none;}
+  .method .ic{width:38px; height:38px; border-radius:10px; background:#F2F1ED; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .method .lbl{font-size:15px; font-weight:500;}
+  .method .sub{font-size:12px; color:var(--sub); margin-top:1px;}
+
+  /* search / manual */
+  .field-search{width:100%; padding:12px 14px; border-radius:12px; border:1px solid var(--line); font-size:15px; background:#F7F7F8; margin-bottom:12px;}
+  .search-results{max-height:50vh; overflow-y:auto;}
+  .result-row{display:flex; gap:12px; align-items:center; padding:8px 2px; border-bottom:1px solid var(--line);}
+  .result-row img{width:38px; height:56px; object-fit:cover; border-radius:2px 5px 5px 2px; box-shadow:2px 4px 8px rgba(0,0,0,0.2); flex-shrink:0; background:#ddd;}
+  .result-row .rt{font-size:14px; font-weight:600; line-height:1.2;}
+  .result-row .ra{font-size:12px; color:var(--sub);}
+  .add-mini{margin-left:auto; background:var(--accent); color:#fff; border:none; border-radius:10px; padding:6px 12px; font-size:13px; font-weight:600; flex-shrink:0;}
+  .back-btn{background:none; border:none; color:var(--accent); font-size:15px; font-weight:500; padding:4px 0; margin-bottom:8px;}
+  .form-label{font-size:13px; color:var(--sub); margin:14px 0 6px; font-weight:600;}
+  .form-input{width:100%; padding:12px 14px; border-radius:12px; border:1px solid var(--line); font-size:15px; background:#F7F7F8;}
+  .swatches{display:flex; gap:10px; margin-top:6px;}
+  .swatch{width:32px; height:32px; border-radius:50%; border:2px solid transparent;}
+  .swatch.sel{border-color:var(--ink);}
+  .status-seg{display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;}
+  .status-seg button{flex:1; min-width:70px; padding:9px; border-radius:10px; border:1px solid var(--line); background:#F7F7F8; font-size:12.5px; font-weight:600; color:var(--sub);}
+  .status-seg button.active{background:var(--ink); color:#fff; border-color:var(--ink);}
+
+  /* detail */
+  .detail-hero{padding:20px; text-align:center;}
+  .detail-title{font-size:22px; font-weight:700; margin-top:16px; font-family:ui-serif,"New York",Charter,Georgia,serif;}
+  .detail-author{font-size:15px; color:var(--sub); margin-top:2px;}
+  .progress-bar{height:8px; background:#EFEFF0; border-radius:4px; overflow:hidden; margin-top:8px;}
+  .progress-bar .fill{height:100%; background:var(--accent);}
+  .del-btn{color:var(--red); background:none; border:none; font-size:15px; font-weight:600; width:100%; padding:14px; margin-top:6px;}
+
+  .toast{position:absolute; left:50%; top:16px; transform:translateX(-50%); background:rgba(28,28,30,0.92); color:#fff; padding:10px 16px; border-radius:12px; font-size:13px; z-index:60; opacity:0; pointer-events:none; transition:opacity .3s;}
+  .toast.show{opacity:1;}
+  .loading-note{font-size:13px; color:var(--sub); padding:10px 2px; text-align:center;}
+
+  /* ===== Figma home restyle ===== */
+  :root{--bg:#F2F2F2;}
+  html,body,#app{background:var(--bg);}
+  .topbar{padding-top:56px;}
+  .home-top{padding:70px 16px 0;}
+  .folder,.stat-tile,.card{border-radius:24px; border:none;}
+  .home-top h1{font-size:34px; letter-spacing:-0.45px;}
+  .streak-pill{background:none;border:none;padding:0;font-family:ui-serif,"New York",Charter,Georgia,serif;font-size:34px;font-weight:700;color:#000;text-decoration:none;gap:4px;}
+  .hero{display:flex; align-items:center; gap:18px; padding:14px 16px 0 32px; min-height:170px;}
+  .hero-stack{position:relative; width:126px; height:167px; flex-shrink:0;}
+  .hero-stack .cover{position:absolute; width:104px; height:146px; border-radius:2px 5px 5px 2px;}
+  .hero-stack .c0{left:22px; top:12px; transform:rotate(-4deg); opacity:.9;}
+  .hero-stack .c1{left:10px; top:6px; transform:rotate(2deg); opacity:.95;}
+  .hero-stack .c2{left:12px; top:14px;}
+  .hero-info{flex:1; text-align:center;}
+  .hero-info .t{font-family:ui-serif,"New York",Charter,Georgia,serif; font-weight:700; font-size:21px; line-height:28px; letter-spacing:-0.45px;}
+  .hero-info .m{font-size:17px; font-weight:510; opacity:.5; margin-top:2px;}
+  .pill-black{background:#000; color:#fff; border:none; border-radius:50px; padding:12px 0; width:141px; font-size:13px; font-weight:600; margin-top:20px;}
+  .block{margin-top:44px;}
+  .h-center{font-family:ui-serif,"New York",Charter,Georgia,serif; font-weight:700; font-size:21px; line-height:28px; letter-spacing:-0.45px; text-align:center; margin:0 0 26px;}
+  .wood-shelf-row{position:relative; display:flex; gap:22px; padding:0 22px 11px; overflow-x:auto; overflow-y:hidden; align-items:flex-end; min-height:156px;}
+  .wood-shelf-row::-webkit-scrollbar{display:none;}
+  /* plank from Figma asset: top face (lighter, tapered) + front edge */
+  .wood-shelf-row::before{content:""; position:absolute; left:6px; right:6px; bottom:10px; height:13px; z-index:0;
+    clip-path:polygon(2% 0,98% 0,100% 100%,0 100%);
+    background:url(assets/plank.png) center/100% 100% no-repeat; filter:brightness(1.18);}
+  .wood-shelf-row::after{content:""; position:absolute; left:6px; right:6px; bottom:0; height:11px; z-index:2; pointer-events:none; border-radius:2.8px;
+    background:url(assets/plank.png) center/100% 100% no-repeat;
+    box-shadow:inset 0 2px 4px #6c4a35, inset 0 2px 3px rgba(0,0,0,.15), 0 3px 6px rgba(0,0,0,.12);}
+  .wood-shelf-row > *{position:relative; z-index:1; flex-shrink:0; margin-bottom:0;}
+  .wood-shelf-row .cover{width:101px; height:144px; border-radius:2px 5px 5px 2px;}
+  .wood-shelf-row.spines{gap:2px; justify-content:center; padding:0 22px 11px;}
+  .spine{width:22px; border-radius:2px; position:relative; overflow:hidden; color:#fff; box-shadow:inset 1px 0 0 rgba(255,255,255,.25), inset -1px 0 0 rgba(0,0,0,.3);}
+  .spine span{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%) rotate(-90deg); white-space:nowrap; font-size:9px; font-weight:700; letter-spacing:.04em; max-width:120px; overflow:hidden; text-overflow:ellipsis;}
+  .white-cards{display:flex; gap:16px; overflow-x:auto; padding:0 16px; scroll-snap-type:x mandatory;}
+  .white-cards::-webkit-scrollbar{display:none;}
+  .white-card{flex:0 0 322px; background:#fff; border-radius:24px; padding:20px; scroll-snap-align:start; box-shadow:0 2px 14px rgba(0,0,0,.04);}
+  .white-card h3{font-family:ui-serif,"New York",Charter,Georgia,serif; font-weight:700; font-size:21px; line-height:28px; letter-spacing:-0.45px; margin:0 0 12px;}
+  .wc-grid{display:flex; gap:16px; height:260px;}
+  .wc-big .cover{width:181px; height:259px; border-radius:2px 6px 6px 2px;}
+  .wc-small{display:flex; flex-direction:column; gap:16px;}
+  .wc-small .cover{width:85px; height:122px; border-radius:2px 4px 4px 2px;}
+  .cta{text-align:center; padding:56px 16px 0;}
+  .cta h2{font-family:ui-serif,"New York",Charter,Georgia,serif; font-weight:600; font-size:27px; line-height:1.15; margin:0;}
+  .cta p{font-size:17px; font-weight:510; opacity:.5; margin:4px 0 0;}
+  .cta .pill-black{width:141px; margin-top:20px;}
+  /* tabbar icons */
+  .tabbar a{display:flex; align-items:center; justify-content:center; height:48px;}
+  .tabbar a.active{background:rgba(0,0,0,.08); color:#FF7A1A;}
+  .tabbar a svg{width:26px; height:26px;}
+  .plus-btn .core{background:transparent;}
+  .plus-btn .core svg{stroke:#000;}
+  /* log sheet */
+  .log-sheet-body{padding-top:4px;}
+
+  .ghost-book{width:101px; height:144px; border-radius:2px 5px 5px 2px; border:2px dashed rgba(0,0,0,.22); background:rgba(255,255,255,.55); display:flex; align-items:center; justify-content:center; color:rgba(0,0,0,.35);}
+  .ghost-book.add{border-color:#000; color:#000; background:#fff;}
+  .empty-home{text-align:center; padding:16px 24px 0;}
+  .empty-home h2{font-family:ui-serif,"New York",Charter,Georgia,serif; font-weight:700; font-size:27px; line-height:1.15; margin:28px 0 0; letter-spacing:-0.45px;}
+  .empty-home p{font-size:17px; font-weight:510; opacity:.5; margin:6px auto 0; max-width:280px; line-height:1.3;}
+  .empty-home .pill-black{width:auto; padding:13px 26px; font-size:15px; margin-top:22px;}
+  .link-btn{display:block; margin:14px auto 0; background:none; border:none; color:#000; opacity:.55; font-size:15px; font-weight:600;}
+  .hero-empty-btn{margin-top:14px;}
+
+  .cta-art{position:relative; width:393px; height:270px; margin:18px auto 0;}
+  .cta-art img{position:absolute; user-select:none; -webkit-user-drag:none;}
+  .cta-art .sun{left:46px; top:-6px; width:131px; z-index:0;}
+  .cta-art .basket{left:42px; top:-14px; width:318px; z-index:1; pointer-events:none;}
+  .cta-art .star-sm{left:272px; top:178px; width:30px; z-index:4;}
+  .cta-art .star-lg{left:278px; top:206px; width:44px; z-index:4;}
+  .cta-art .bk{position:absolute; z-index:2;}
+  .cta-art .bk .cover{width:100%; height:100%; border-radius:2px 5px 5px 2px;}
+  .cta-art .bk0{left:132px; top:58px; width:74px; height:102px; transform:rotate(8deg);}
+  .cta-art .bk1{left:204px; top:84px; width:76px; height:100px; transform:rotate(-6deg); z-index:2;}
+  .cta-art .bk2{left:106px; top:128px; width:74px; height:98px; transform:rotate(-12deg); z-index:2;}
+  .cta-art .bk3{left:172px; top:148px; width:70px; height:94px; transform:rotate(3deg); z-index:2;}
+
+  /* ===== Book look from Figma: flat cover, hinge groove near the spine, soft ground shadow ===== */
+  .cover{overflow:visible !important; border-radius:3px 5px 5px 3px; background-color:#d9d4c7;
+    box-shadow:0 12px 12px -8px rgba(0,0,0,.34), 0 20px 22px -14px rgba(0,0,0,.26) !important;}
+  .cover-lg{border-radius:4px 7px 7px 4px;}
+  .cover .pages{display:none !important;}
+  .cover::before{border-radius:inherit; background:linear-gradient(100deg, rgba(255,255,255,.14) 0%, rgba(255,255,255,0) 30%, rgba(0,0,0,0) 80%, rgba(0,0,0,.06) 100%) !important;}
+  .cover::after{width:auto !important; right:auto; left:0; top:0; bottom:0; width:7% !important; min-width:6px; border-radius:inherit; z-index:3; pointer-events:none;
+    background:
+      linear-gradient(to right,
+        rgba(255,255,255,.22) 0, rgba(255,255,255,.22) 1px,
+        rgba(0,0,0,.32) 1px, rgba(0,0,0,.32) 2px,
+        rgba(0,0,0,0) 2px, rgba(0,0,0,0) 4px,
+        rgba(0,0,0,.20) 4px, rgba(0,0,0,.20) 5px,
+        rgba(255,255,255,.24) 5px, rgba(255,255,255,.24) 6px,
+        rgba(0,0,0,0) 6px) !important;}
+  .cover .txt{z-index:2;}
+</style>
+<div id="app">
+
+  <!-- HOME -->
+  <div class="screen active" id="screen-home">
+    <div class="topbar home-top">
+      <h1 class="serif">Главная</h1>
+      <a href="#stats" class="streak-pill" onclick="nav('stats');return false;"><span id="streak-count">0</span>
+        <svg width="22" height="26" viewBox="0 0 22 26" fill="none"><path d="M11 1c1 4-3 6-3 10 0 2 1 3 2 3-1-3 2-5 3-7 3 3 6 6 6 10a8 8 0 0 1-16 0c0-3 1-5 3-7 0 2 1 3 2 3-1-4 1-8 3-12z" fill="#000"/></svg>
+      </a>
+    </div>
+
+    <div id="home-empty" class="empty-home" style="display:none;">
+      <div class="wood-shelf-row" style="justify-content:center; margin-top:48px;">
+        <div class="ghost-book add" onclick="openSheet()"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div>
+        <div class="ghost-book"></div>
+        <div class="ghost-book"></div>
+      </div>
+      <h2>Здесь пока пусто</h2>
+      <p>Добавь первую книгу, и на полке появится твоя библиотека</p>
+      <button class="pill-black" onclick="openSheet()">Добавить книгу</button>
+      <button class="link-btn" onclick="openSheet();showSearch()">Найти по названию</button>
+    </div>
+    <div id="home-content">
+    <div class="hero" id="hero"></div>
+
+    <div class="block">
+      <h2 class="h-center">Далее</h2>
+      <div class="wood-shelf-row" id="upnext-row"></div>
+    </div>
+
+    <div class="block">
+      <div class="white-cards" id="want-cards"></div>
+    </div>
+
+    <div class="block">
+      <h2 class="h-center">Ваша полка</h2>
+      <div class="wood-shelf-row spines" id="spines-row"></div>
+    </div>
+
+    <div class="cta">
+      <h2>Не знаешь, что читать дальше?</h2>
+      <p>Подберём за тебя</p>
+      <button class="pill-black" onclick="pickRandom()">Попробовать</button>
+      <div class="cta-art" id="cta-art">
+        <img class="sun" src="assets/sunburst.png" alt="">
+        <div id="cta-books"></div>
+        <img class="basket" src="assets/basket.png" alt="">
+        <img class="star-sm" src="assets/star-sm.png" alt="">
+        <img class="star-lg" src="assets/star-lg.png" alt="">
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <!-- LIBRARY -->
+  <div class="screen" id="screen-library">
+    <div id="library-folders">
+      <div class="topbar"><h1 class="serif">Библиотека</h1></div>
+      <div class="folder-grid" id="folder-grid"></div>
+    </div>
+    <div id="library-books" style="display:none;">
+      <button class="back-pill" onclick="closeFolder()">‹ Библиотека</button>
+      <div style="padding:0 20px;"><h2 class="serif" id="folder-title" style="font-size:22px;margin:0 0 4px;"></h2></div>
+      <div class="book-grid" id="folder-book-grid"></div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="screen" id="screen-stats">
+    <div class="topbar"><h1 class="serif">Статистика</h1></div>
+    <div class="section">
+      <div class="card" style="text-align:center; padding:22px;">
+        <div style="font-size:15px;color:var(--sub);">Серия дней чтения</div>
+        <div style="font-size:44px;font-weight:700;font-family:ui-serif,'New York',Charter,Georgia,serif;margin-top:4px;" id="stat-streak">0</div>
+        <div style="font-size:13px;color:var(--sub);">дней подряд</div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">Активность</div>
+      <div class="heat" id="heatmap"></div>
+    </div>
+    <div class="section">
+      <div class="stat-grid" id="stat-tiles"></div>
+    </div>
+  </div>
+
+  <!-- DETAIL -->
+  <div class="screen" id="screen-detail">
+    <button class="back-pill" onclick="nav('home')">‹ Назад</button>
+    <div class="detail-hero">
+      <div class="cover cover-lg" id="detail-cover"></div>
+      <div class="detail-title" id="detail-title"></div>
+      <div class="detail-author" id="detail-author"></div>
+    </div>
+    <div class="section">
+      <div class="section-title">Статус</div>
+      <div class="status-seg" id="detail-status"></div>
+    </div>
+    <div class="section" id="detail-progress-block">
+      <div class="section-title">Прогресс</div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;font-size:14px;"><span id="detail-progress-text"></span><span id="detail-progress-pct"></span></div>
+        <div class="progress-bar"><div class="fill" id="detail-progress-fill" style="width:0%;"></div></div>
+        <button class="save-btn" style="margin-top:14px;" onclick="bumpProgress()">+10 страниц</button>
+      </div>
+    </div>
+    <div class="section"><button class="del-btn" onclick="deleteCurrentBook()">Удалить книгу</button></div>
+  </div>
+
+  <!-- tabbar -->
+  <div class="tabbar-wrap">
+    <div class="tabbar">
+      <a href="#home" id="tab-home" onclick="nav('home');return false;" aria-label="Главная"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 3 10.5V21h6v-6h6v6h6V10.5z"/></svg></a>
+      <a href="#library" id="tab-library" onclick="nav('library');return false;" aria-label="Библиотека"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="5" width="4" height="15" rx="1"/><rect x="9" y="3" width="4" height="17" rx="1"/><path d="M15.5 6.5 19 5.5l3 12-3.5 1z"/></svg></a>
+    </div>
+    <button class="plus-btn" onclick="openSheet()" aria-label="Добавить книгу">
+      <div class="core"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div>
+    </button>
+  </div>
+
+  <!-- add sheet -->
+  <div class="scrim" id="scrim" onclick="closeSheet()"></div>
+  <div class="sheet" id="sheet">
+    <div class="grabber"></div>
+    <div id="sheet-methods">
+      <h2>Добавить книгу</h2>
+      <button class="method" onclick="showSearch()"><div class="ic">🔍</div><div><div class="lbl">Найти по названию</div><div class="sub">Поиск в Google Books</div></div></button>
+      <button class="method" onclick="showManual()"><div class="ic">✍️</div><div><div class="lbl">Добавить вручную</div><div class="sub">Своя обложка и данные</div></div></button>
+    </div>
+    <div id="sheet-log" style="display:none;"><div class="log-sheet-body" id="log-widget"></div></div>
+    <div id="sheet-search" style="display:none;">
+      <button class="back-btn" onclick="showMethods()">‹ Назад</button>
+      <h2>Поиск книги</h2>
+      <div style="display:flex;gap:8px;"><input class="field-search" id="search-input" placeholder="Название или автор" style="margin-bottom:0;" onkeydown="if(event.key==='Enter')runSearch()"><button class="add-mini" style="padding:0 16px;" onclick="runSearch()">Найти</button></div>
+      <div class="loading-note" style="text-align:left;padding:8px 2px 10px;">Подборку составляет Claude по своим знаниям: обложек нет, данные лучше проверить.</div>
+      <div class="search-results" id="search-results"></div>
+    </div>
+    <div id="sheet-manual" style="display:none;">
+      <button class="back-btn" onclick="showMethods()">‹ Назад</button>
+      <h2>Добавить вручную</h2>
+      <div class="form-label">Название</div>
+      <input class="form-input" id="man-title" placeholder="Название книги">
+      <div class="form-label">Автор</div>
+      <input class="form-input" id="man-author" placeholder="Автор">
+      <div class="form-label">Цвет обложки</div>
+      <div class="swatches" id="man-swatches"></div>
+      <div class="form-label">Статус</div>
+      <div class="status-seg" id="man-status"></div>
+      <button class="save-btn" style="margin-top:18px;" onclick="submitManual()">Добавить книгу</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* ---------- constants ---------- */
+const STATUSES = [
+  {key:'want', label:'Хочу прочитать', color:'#6B7A8F'},
+  {key:'reading', label:'Читаю', color:'#007AFF'},
+  {key:'finished', label:'Прочитано', color:'#34C759'},
+  {key:'not_finished', label:'Брошено', color:'#FF3B30'},
+];
+const SWATCH_COLORS = ['#8A6D3B','#B0413E','#3B6E8F','#5A7247','#6B4E8F','#2E2E30'];
+
+/* ---------- state ---------- */
+let db = null;
+let books = [];              // [{id, title, authors, cover, coverColor, status, progressPages, totalPages, addedAt}]
+let streakDoc = {logsByDate:{}};
+let currentBookId = null;
+let openFolderKey = null;
+let logMode = 'pages';
+let logVal = 20;
+let searchTimer = null;
+let manSwatch = SWATCH_COLORS[0];
+let manStatus = 'want';
+
+/* ---------- utils ---------- */
+function todayISO(d){ d = d || new Date(); return d.toISOString().slice(0,10); }
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
+function statusMeta(key){ return STATUSES.find(s=>s.key===key) || STATUSES[0]; }
+
+function coverHTML(book, size){
+  const cls = size === 'lg' ? 'cover cover-lg' : 'cover';
+  const bg = book.cover ? `style="background-image:url('${book.cover.replace(/'/g,"")}');"` : `style="background:${book.coverColor||'#6B7A8F'};"`;
+  const txt = book.cover ? '' : `<div class="txt">${escapeHtml(book.title||'')}</div>`;
+  return `<div class="${cls}" ${bg}><div class="pages"></div>${txt}</div>`;
+}
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ---------- navigation ---------- */
+function nav(screen){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+screen).classList.add('active');
+  ['home','stats','library'].forEach(k=>{
+    const el = document.getElementById('tab-'+k);
+    if(el) el.classList.toggle('active', k===screen);
+  });
+  if(screen==='stats') renderStats();
+  if(screen==='library') renderLibrary();
+}
+
+function openBook(id){
+  currentBookId = id;
+  renderDetail();
+  nav('detail');
+}
+
+/* ---------- add sheet ---------- */
+function openSheet(){
+  showMethods();
+  document.getElementById('scrim').classList.add('open');
+  document.getElementById('sheet').classList.add('open');
+}
+function closeSheet(){
+  editingLog=false;
+  document.getElementById('scrim').classList.remove('open');
+  document.getElementById('sheet').classList.remove('open');
+}
+function showMethods(){
+  document.getElementById('sheet-methods').style.display='block';document.getElementById('sheet-log').style.display='none';
+  document.getElementById('sheet-search').style.display='none';
+  document.getElementById('sheet-manual').style.display='none';
+}
+function showSearch(){
+  document.getElementById('sheet-log').style.display='none';
+  document.getElementById('sheet-methods').style.display='none';
+  document.getElementById('sheet-search').style.display='block';
+  document.getElementById('sheet-manual').style.display='none';
+  document.getElementById('search-results').innerHTML = '';
+  document.getElementById('search-input').value = '';
+  document.getElementById('search-input').focus();
+}
+function showManual(){
+  document.getElementById('sheet-log').style.display='none';
+  document.getElementById('sheet-methods').style.display='none';
+  document.getElementById('sheet-search').style.display='none';
+  document.getElementById('sheet-manual').style.display='block';
+  document.getElementById('man-title').value='';
+  document.getElementById('man-author').value='';
+  manSwatch = SWATCH_COLORS[0];
+  manStatus = 'want';
+  renderManualPickers();
+}
+function renderManualPickers(){
+  const sw = document.getElementById('man-swatches');
+  sw.innerHTML = SWATCH_COLORS.map(c=>`<div class="swatch ${c===manSwatch?'sel':''}" style="background:${c};" onclick="pickSwatch('${c}')"></div>`).join('');
+  const st = document.getElementById('man-status');
+  st.innerHTML = STATUSES.map(s=>`<button class="${s.key===manStatus?'active':''}" onclick="pickManStatus('${s.key}')">${s.label}</button>`).join('');
+}
+function pickSwatch(c){ manSwatch=c; renderManualPickers(); }
+function pickManStatus(k){ manStatus=k; renderManualPickers(); }
+
+/* ---------- search (real Google Books API) ---------- */
+let searchAbort=null;
+async function runSearch(){
+  const q = document.getElementById('search-input').value.trim();
+  const box = document.getElementById('search-results');
+  if(!q){ box.innerHTML=''; return; }
+  let sample=null;
+  try{ sample = await claude.use('sample'); }catch(e){}
+  if(!sample){ box.innerHTML = '<div class="loading-note">Поиск недоступен в этом окне. Добавь книгу вручную.</div>'; return; }
+  if(searchAbort) searchAbort.abort();
+  searchAbort = new AbortController();
+  box.innerHTML = '<div class="loading-note">Ищу…</div>';
+  try{
+    const items = await sample.json(
+      'Пользователь ищет книгу в своей библиотеке. Запрос: "'+q.replace(/"/g,"'")+'". '+
+      'Верни JSON-массив из 1-8 реально существующих книг, которые лучше всего подходят под запрос, самые вероятные первыми. '+
+      'Формат элемента: {"title": строка, "authors": строка (через запятую), "pages": число или null}. '+
+      'Название и авторов пиши как принято у русскоязычного читателя, если у книги есть русское издание, иначе на языке оригинала. '+
+      'pages ставь только если уверен, иначе null. Если подходящих книг нет, верни []. Ответ только JSON, без пояснений.',
+      {modelTier:'quick', signal: searchAbort.signal}
+    );
+    const list = Array.isArray(items) ? items.filter(x=>x && x.title) : [];
+    if(!list.length){ box.innerHTML = '<div class="loading-note">Ничего не найдено. Попробуй другое название или добавь вручную.</div>'; return; }
+    box.innerHTML = list.slice(0,8).map(it=>{
+      const authors = String(it.authors||'');
+      const pages = Number.isFinite(it.pages) ? it.pages : null;
+      const color = SWATCH_COLORS[Math.abs(hashStr(it.title))%SWATCH_COLORS.length];
+      const payload = encodeURIComponent(JSON.stringify({title:String(it.title), authors, cover:'', totalPages:pages, color}));
+      return `<div class="result-row">
+        <div style="width:38px;height:56px;background:${color};border-radius:2px 5px 5px 2px;flex-shrink:0;box-shadow:2px 4px 8px rgba(0,0,0,.2);"></div>
+        <div><div class="rt">${escapeHtml(String(it.title))}</div><div class="ra">${escapeHtml(authors)}${pages?' · '+pages+' стр.':''}</div></div>
+        <button class="add-mini" onclick="addFromSearch('${payload}')">Добавить</button>
+      </div>`;
+    }).join('');
+  }catch(e){
+    if(e && e.code==='cancelled') return;
+    const msg = e && e.code==='not_granted' ? 'Нужно разрешить Claude отвечать на запросы страницы.' : (e && e.code==='rate_limited' ? 'Слишком часто. Подожди немного.' : 'Не удалось получить подборку. Попробуй ещё раз.');
+    box.innerHTML = '<div class="loading-note">'+msg+'</div>';
+  }
+}
+function hashStr(t){ let h=0; for(let i=0;i<t.length;i++){ h=(h*31+t.charCodeAt(i))|0; } return h; }
+async function addFromSearch(payload){
+  const b = JSON.parse(decodeURIComponent(payload));
+  await createBook({
+    title: b.title, authors: b.authors, cover: b.cover || '', coverColor: b.color || SWATCH_COLORS[0],
+    status: 'want', progressPages: 0, totalPages: b.totalPages || null, volumeId: b.volumeId || null,
+    addedAt: new Date().toISOString()
+  });
+  toast('Книга добавлена в «Хочу прочитать»');
+  closeSheet();
+}
+async function submitManual(){
+  const title = document.getElementById('man-title').value.trim();
+  const authors = document.getElementById('man-author').value.trim();
+  if(!title){ toast('Введите название'); return; }
+  await createBook({
+    title, authors, cover:'', coverColor: manSwatch, status: manStatus,
+    progressPages:0, totalPages:null, addedAt: new Date().toISOString()
+  });
+  toast('Книга добавлена');
+  closeSheet();
+}
+
+/* ---------- db-backed CRUD ---------- */
+async function createBook(data){
+  if(!db){ toast('Хранилище недоступно'); return; }
+  try{
+    const ref = await db.collection('books').add(data);
+    books.push(Object.assign({id: ref.id}, data));
+    renderAll();
+  }catch(e){
+    toast('Не удалось сохранить книгу');
+  }
+}
+async function updateBook(id, patch){
+  const b = books.find(x=>x.id===id);
+  if(b) Object.assign(b, patch);
+  renderAll();
+  if(!db) return;
+  try{ await db.doc('books/'+id).update(patch); }catch(e){ toast('Не удалось сохранить изменения'); }
+}
+async function deleteBookDoc(id){
+  books = books.filter(x=>x.id!==id);
+  renderAll();
+  if(!db) return;
+  try{ await db.doc('books/'+id).delete(); }catch(e){}
+}
+
+/* ---------- detail ---------- */
+function renderDetail(){
+  const b = books.find(x=>x.id===currentBookId);
+  if(!b) return;
+  document.getElementById('detail-cover').outerHTML = coverHTML(b,'lg').replace('class="cover cover-lg"','id="detail-cover" class="cover cover-lg"');
+  document.getElementById('detail-title').textContent = b.title;
+  document.getElementById('detail-author').textContent = b.authors || '';
+  const seg = document.getElementById('detail-status');
+  seg.innerHTML = STATUSES.map(s=>`<button class="${s.key===b.status?'active':''}" onclick="setBookStatus('${b.id}','${s.key}')">${s.label}</button>`).join('');
+  const block = document.getElementById('detail-progress-block');
+  if(b.status==='reading'){
+    block.style.display='block';
+    const total = b.totalPages || 300;
+    const pct = Math.min(100, Math.round(((b.progressPages||0)/total)*100));
+    document.getElementById('detail-progress-text').textContent = `${b.progressPages||0} из ${b.totalPages||'?'} стр.`;
+    document.getElementById('detail-progress-pct').textContent = pct+'%';
+    document.getElementById('detail-progress-fill').style.width = pct+'%';
+  } else {
+    block.style.display='none';
+  }
+}
+function setBookStatus(id, status){
+  updateBook(id, {status});
+  renderDetail();
+}
+function bumpProgress(){
+  const b = books.find(x=>x.id===currentBookId);
+  if(!b) return;
+  updateBook(b.id, {progressPages:(b.progressPages||0)+10});
+  renderDetail();
+}
+function deleteCurrentBook(){
+  if(!currentBookId) return;
+  deleteBookDoc(currentBookId);
+  nav('home');
+}
+
+/* ---------- home render ---------- */
+function renderAll(){
+  renderToday();
+  renderLogWidget();
+  renderShelves();
+  if(document.getElementById('screen-library').classList.contains('active')) renderLibrary();
+  if(document.getElementById('screen-stats').classList.contains('active')) renderStats();
+  if(document.getElementById('screen-detail').classList.contains('active')) renderDetail();
+  renderStreakPill();
+}
+function bookPct(b){
+  const total = b.totalPages || 300;
+  return Math.min(100, Math.round(((b.progressPages||0)/total)*100));
+}
+function spineColor(b){
+  return b.coverColor || '#6B7A8F';
+}
+function renderToday(){
+  renderCtaBooks();
+  const isEmpty = books.length===0;
+  document.getElementById('home-empty').style.display = isEmpty ? 'block':'none';
+  document.getElementById('home-content').style.display = isEmpty ? 'none':'block';
+  const reading = books.filter(b=>b.status==='reading');
+  const hero = document.getElementById('hero');
+  if(reading.length===0){
+    hero.innerHTML = `<div class="hero-info"><div class="t">Сейчас ничего не читаешь</div><div class="m">Выбери, с чего начать</div><button class="pill-black hero-empty-btn" onclick="pickRandom()">Выбрать книгу</button></div>`;
+  } else {
+    const main = reading[0];
+    const rs = reading.slice(0,3).reverse();
+    const stack = rs.map((b,i)=>coverHTML(b).replace('class="cover"','class="cover c'+(3-rs.length+i)+'"')).join('');
+    hero.innerHTML = `<div class="hero-stack" onclick="openBook('${main.id}')">${stack}</div>
+      <div class="hero-info"><div class="t">${escapeHtml(main.title)}</div><div class="m">Читаю • ${bookPct(main)}%</div>
+      <button class="pill-black" onclick="openLogSheet()">Читал(а) сегодня</button></div>`;
+  }
+  // Up next = want, on wood shelf
+  const want = books.filter(b=>b.status==='want');
+  document.getElementById('upnext-row').innerHTML = want.length
+    ? want.slice(0,6).map(b=>`<div onclick="openBook('${b.id}')">${coverHTML(b)}</div>`).join('')
+    : `<div class="ghost-book add" onclick="openSheet()"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div>`;
+}
+function openLogSheet(){
+  document.getElementById('sheet-methods').style.display='none';
+  document.getElementById('sheet-search').style.display='none';
+  document.getElementById('sheet-manual').style.display='none';
+  document.getElementById('sheet-log').style.display='block';
+  document.getElementById('scrim').classList.add('open');
+  document.getElementById('sheet').classList.add('open');
+  renderLogWidget();
+}
+function renderCtaBooks(){
+  const box = document.getElementById('cta-books'); if(!box) return;
+  const pool = books.filter(b=>b.status==='want').concat(books.filter(b=>b.status!=='want')).slice(0,4);
+  box.innerHTML = pool.map((b,i)=>`<div class="bk bk${i}">${coverHTML(b)}</div>`).join('');
+}
+function pickRandom(){
+  const pool = books.filter(b=>b.status==='want');
+  if(!pool.length){ toast('Сначала добавь книги в «Хочу прочитать»'); return; }
+  openBook(pool[Math.floor(Math.random()*pool.length)].id);
+}
+function computeStreak(){
+  const dates = Object.keys(streakDoc.logsByDate||{}).sort();
+  if(dates.length===0) return 0;
+  const set = new Set(dates);
+  let d = new Date();
+  if(!set.has(todayISO(d))) d.setDate(d.getDate()-1); // allow "not logged today yet"
+  let streak = 0;
+  while(set.has(todayISO(d))){
+    streak++;
+    d.setDate(d.getDate()-1);
+  }
+  return streak;
+}
+function renderStreakPill(){
+  document.getElementById('streak-count').textContent = computeStreak();
+}
+function renderLogWidget(){
+  const box = document.getElementById('log-widget');
+  const today = todayISO();
+  const log = (streakDoc.logsByDate||{})[today];
+  if(log && !editingLog){
+    box.innerHTML = `<div class="done-row">✅ Сегодня отмечено: +${log.amount} ${log.unit==='pages'?'стр.':'мин'} <a class="edit-link" onclick="startEditLog()">Изменить</a></div>`;
+  } else {
+    box.innerHTML = `<button class="log-btn" onclick="startEditLog()">Отметить, что читал(а) сегодня</button>`;
+  }
+}
+let editingLog=false;
+function startEditLog(){
+  editingLog=true;
+  const today = todayISO();
+  const existing = (streakDoc.logsByDate||{})[today];
+  logMode = existing ? existing.unit : 'pages';
+  logVal = existing ? existing.amount : 20;
+  const box = document.getElementById('log-widget');
+  box.innerHTML = `
+    <div class="seg">
+      <button id="seg-pages" class="${logMode==='pages'?'active':''}" onclick="setLogMode('pages')">Страницы</button>
+      <button id="seg-time" class="${logMode==='time'?'active':''}" onclick="setLogMode('time')">Время</button>
+    </div>
+    <div class="stepper">
+      <button onclick="stepLog(-5)">−</button>
+      <div class="val" id="log-val">${logVal} ${logMode==='pages'?'стр.':'мин'}</div>
+      <button onclick="stepLog(5)">+</button>
+    </div>
+    <button class="save-btn" onclick="saveLog()">Сохранить</button>
+  `;
+}
+function setLogMode(m){
+  logMode = m;
+  document.getElementById('seg-pages').classList.toggle('active', m==='pages');
+  document.getElementById('seg-time').classList.toggle('active', m==='time');
+  document.getElementById('log-val').textContent = `${logVal} ${m==='pages'?'стр.':'мин'}`;
+}
+function stepLog(delta){
+  logVal = Math.max(0, logVal+delta);
+  document.getElementById('log-val').textContent = `${logVal} ${logMode==='pages'?'стр.':'мин'}`;
+}
+async function saveLog(){
+  editingLog=false;
+  const today = todayISO();
+  streakDoc.logsByDate = streakDoc.logsByDate || {};
+  streakDoc.logsByDate[today] = {amount: logVal, unit: logMode};
+  renderLogWidget();
+  setTimeout(closeSheet, 700);
+  renderStreakPill();
+  if(document.getElementById('screen-stats').classList.contains('active')) renderStats();
+  if(!db) return;
+  try{
+    const ref = db.doc('state/streak');
+    const snap = await ref.get();
+    if(snap.exists) await ref.update({logsByDate: {[today]: {amount: logVal, unit: logMode}}});
+    else await ref.set({logsByDate: {[today]: {amount: logVal, unit: logMode}}});
+  }catch(e){ toast('Не удалось сохранить отметку'); }
+}
+
+function renderShelves(){
+  // Want to read: white cards, each 1 big + 2 small
+  const want = books.filter(b=>b.status==='want');
+  const cards=[];
+  for(let i=0;i<want.length;i+=3){
+    const big=want[i], s1=want[i+1], s2=want[i+2];
+    cards.push(`<div class="white-card"><h3>Хочу прочитать</h3><div class="wc-grid">
+      <div class="wc-big" onclick="openBook('${big.id}')">${coverHTML(big)}</div>
+      <div class="wc-small">${[s1,s2].filter(Boolean).map(b=>`<div onclick="openBook('${b.id}')">${coverHTML(b)}</div>`).join('')}</div>
+    </div></div>`);
+  }
+  document.getElementById('want-cards').innerHTML = cards.join('') || `<div class="white-card"><h3>Хочу прочитать</h3><div class="empty-note">Пока пусто — добавь книги кнопкой «+»</div></div>`;
+  // Bookshelf spines: finished + reading + not finished
+  const shelf = books.filter(b=>b.status!=='want');
+  const heights=[144,114,140,137,110,141,141,144,144,139,144];
+  document.getElementById('spines-row').innerHTML = shelf.length
+    ? shelf.slice(0,14).map((b,i)=>`<div class="spine" style="height:${heights[i%heights.length]}px;background:${spineColor(b)};" onclick="openBook('${b.id}')"><span>${escapeHtml(b.title)}</span></div>`).join('')
+    : `<div class="empty-note" style="width:100%;text-align:center;">Здесь появятся прочитанные книги</div>`;
+}
+
+/* ---------- library ---------- */
+function renderLibrary(){
+  document.getElementById('library-folders').style.display = openFolderKey ? 'none':'block';
+  document.getElementById('library-books').style.display = openFolderKey ? 'block':'none';
+  if(!openFolderKey){
+    document.getElementById('folder-grid').innerHTML = STATUSES.map(s=>{
+      const count = books.filter(b=>b.status===s.key).length;
+      return `<div class="folder" onclick="openFolder('${s.key}')">
+        <div class="icon" style="background:${s.color}22;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${s.color}" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>
+        </div>
+        <div class="name">${s.label}</div>
+        <div class="count">${count} книг</div>
+      </div>`;
+    }).join('');
+  } else {
+    const meta = statusMeta(openFolderKey);
+    document.getElementById('folder-title').textContent = meta.label;
+    const list = books.filter(b=>b.status===openFolderKey);
+    document.getElementById('folder-book-grid').innerHTML = list.length ? list.map(b=>
+      `<div onclick="openBook('${b.id}')">${coverHTML(b)}<div class="title">${escapeHtml(b.title)}</div></div>`
+    ).join('') : `<div class="empty-note">В этой папке пока пусто</div>`;
+  }
+}
+function openFolder(k){ openFolderKey=k; renderLibrary(); }
+function closeFolder(){ openFolderKey=null; renderLibrary(); }
+
+/* ---------- stats ---------- */
+function renderStats(){
+  document.getElementById('stat-streak').textContent = computeStreak();
+  const dates = Object.keys(streakDoc.logsByDate||{});
+  const totalPages = dates.reduce((sum,d)=>{
+    const l = streakDoc.logsByDate[d];
+    return sum + (l.unit==='pages' ? l.amount : 0);
+  },0);
+  const totalMinutes = dates.reduce((sum,d)=>{
+    const l = streakDoc.logsByDate[d];
+    return sum + (l.unit==='time' ? l.amount : 0);
+  },0);
+  const finished = books.filter(b=>b.status==='finished').length;
+  document.getElementById('stat-tiles').innerHTML = `
+    <div class="stat-tile"><div class="num serif">${finished}</div><div class="lab">книг прочитано</div></div>
+    <div class="stat-tile"><div class="num serif">${totalPages}</div><div class="lab">страниц отмечено</div></div>
+    <div class="stat-tile"><div class="num serif">${totalMinutes}</div><div class="lab">минут отмечено</div></div>
+    <div class="stat-tile"><div class="num serif">${books.length}</div><div class="lab">книг в библиотеке</div></div>
+  `;
+  // heatmap: last 84 days
+  const cells = [];
+  const d = new Date();
+  d.setDate(d.getDate()-83);
+  for(let i=0;i<84;i++){
+    const iso = todayISO(d);
+    const has = !!(streakDoc.logsByDate||{})[iso];
+    cells.push(has);
+    d.setDate(d.getDate()+1);
+  }
+  document.getElementById('heatmap').innerHTML = cells.map(has=>`<div style="background:${has?'#007AFF':'#E4E1D8'};"></div>`).join('');
+}
+
+/* ---------- boot ---------- */
+async function boot(){
+  renderAll();
+  try{
+    db = await claude.use('db');
+  }catch(e){ db = null; }
+
+  if(!db){
+    toast('Локальный режим: изменения не сохранятся между визитами');
+    return;
+  }
+
+  try{
+    const snap = await db.doc('state/streak').get();
+    streakDoc = snap.exists ? snap.data() : {logsByDate:{}};
+  }catch(e){ streakDoc = {logsByDate:{}}; }
+
+  try{
+    const qs = await db.collection('books').orderBy('addedAt','desc').limit(500).get();
+    books = qs.docs.map(d=>Object.assign({id:d.id}, d.data()));
+  }catch(e){ books = []; }
+
+  renderAll();
+
+  // live updates
+  try{
+    db.collection('books').onSnapshot(qs=>{
+      books = qs.docs.map(d=>Object.assign({id:d.id}, d.data()));
+      renderAll();
+    });
+    db.doc('state/streak').onSnapshot(snap=>{
+      streakDoc = snap.exists ? snap.data() : {logsByDate:{}};
+      renderAll();
+    });
+  }catch(e){}
+}
+boot();
+</script>
+
